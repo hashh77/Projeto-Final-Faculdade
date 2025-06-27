@@ -1,0 +1,282 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_CLIENTES 100
+#define MAX_PRODUTOS 100
+#define MAX_VENDAS 100
+#define MAX_ITENS 10
+
+typedef struct {
+    int id;
+    char nome[100];
+    char cpf[15];
+} Cliente;
+
+typedef struct {
+    int id;
+    char nome[100];
+    float preco;
+    int estoque;
+} Produto;
+
+typedef struct {
+    int idProduto;
+    int quantidade;
+    float valorUnitario;
+} ItemVenda;
+
+typedef struct {
+    int id;
+    int idCliente;
+    char data[11];
+    ItemVenda itens[MAX_ITENS];
+    int totalItens;
+    float totalNota;
+} Venda;
+
+Cliente clientes[MAX_CLIENTES];
+int totalClientes = 0;
+
+Produto produtos[MAX_PRODUTOS];
+int totalProdutos = 0;
+
+Venda vendas[MAX_VENDAS];
+int totalVendas = 0;
+
+// Funções auxiliares
+void limparBuffer() {
+    while (getchar() != '\n');
+}
+
+void pause() {
+    printf("\nPressione ENTER para continuar...");
+    limparBuffer();
+}
+
+void cadastrarCliente() {
+    Cliente c;
+    c.id = totalClientes + 1;
+
+    printf("Nome do cliente: ");
+    fgets(c.nome, sizeof(c.nome), stdin);
+    c.nome[strcspn(c.nome, "\n")] = '\0';
+
+    printf("CPF do cliente: ");
+    fgets(c.cpf, sizeof(c.cpf), stdin);
+    c.cpf[strcspn(c.cpf, "\n")] = '\0';
+
+    clientes[totalClientes++] = c;
+    printf("Cliente cadastrado com sucesso!\n");
+}
+
+void listarClientes() {
+    printf("\n--- Lista de Clientes ---\n");
+    for (int i = 0; i < totalClientes; i++) {
+        printf("ID: %d | Nome: %s | CPF: %s\n", clientes[i].id, clientes[i].nome, clientes[i].cpf);
+    }
+}
+
+void atualizarCliente() {
+    int id;
+    printf("Digite o ID do cliente que deseja atualizar: ");
+    scanf("%d", &id); limparBuffer();
+
+    for (int i = 0; i < totalClientes; i++) {
+        if (clientes[i].id == id) {
+            printf("Novo nome: ");
+            fgets(clientes[i].nome, sizeof(clientes[i].nome), stdin);
+            clientes[i].nome[strcspn(clientes[i].nome, "\n")] = '\0';
+
+            printf("Novo CPF: ");
+            fgets(clientes[i].cpf, sizeof(clientes[i].cpf), stdin);
+            clientes[i].cpf[strcspn(clientes[i].cpf, "\n")] = '\0';
+
+            printf("Cliente atualizado!\n");
+            return;
+        }
+    }
+    printf("Cliente não encontrado!\n");
+}
+
+void excluirCliente() {
+    int id;
+    printf("Digite o ID do cliente que deseja excluir: ");
+    scanf("%d", &id); limparBuffer();
+
+    for (int i = 0; i < totalClientes; i++) {
+        if (clientes[i].id == id) {
+            for (int j = i; j < totalClientes - 1; j++) {
+                clientes[j] = clientes[j + 1];
+            }
+            totalClientes--;
+            printf("Cliente excluído!\n");
+            return;
+        }
+    }
+    printf("Cliente não encontrado!\n");
+}
+
+void cadastrarProduto() {
+    Produto p;
+    p.id = totalProdutos + 1;
+
+    printf("Nome do produto: ");
+    fgets(p.nome, sizeof(p.nome), stdin);
+    p.nome[strcspn(p.nome, "\n")] = '\0';
+
+    printf("Preço unitário: ");
+    scanf("%f", &p.preco);
+
+    printf("Estoque disponível: ");
+    scanf("%d", &p.estoque);
+    limparBuffer();
+
+    produtos[totalProdutos++] = p;
+    printf("Produto cadastrado!\n");
+}
+
+void listarProdutos() {
+    printf("\n--- Lista de Produtos ---\n");
+    for (int i = 0; i < totalProdutos; i++) {
+        printf("ID: %d | Nome: %s | Preço: %.2f | Estoque: %d\n", produtos[i].id, produtos[i].nome, produtos[i].preco, produtos[i].estoque);
+    }
+}
+
+void atualizarProduto() {
+    int id;
+    printf("Digite o ID do produto que deseja atualizar: ");
+    scanf("%d", &id); limparBuffer();
+
+    for (int i = 0; i < totalProdutos; i++) {
+        if (produtos[i].id == id) {
+            printf("Novo nome: ");
+            fgets(produtos[i].nome, sizeof(produtos[i].nome), stdin);
+            produtos[i].nome[strcspn(produtos[i].nome, "\n")] = '\0';
+
+            printf("Novo preço: ");
+            scanf("%f", &produtos[i].preco);
+
+            printf("Novo estoque: ");
+            scanf("%d", &produtos[i].estoque);
+            limparBuffer();
+
+            printf("Produto atualizado!\n");
+            return;
+        }
+    }
+    printf("Produto não encontrado!\n");
+}
+
+void excluirProduto() {
+    int id;
+    printf("Digite o ID do produto que deseja excluir: ");
+    scanf("%d", &id); limparBuffer();
+
+    for (int i = 0; i < totalProdutos; i++) {
+        if (produtos[i].id == id) {
+            for (int j = i; j < totalProdutos - 1; j++) {
+                produtos[j] = produtos[j + 1];
+            }
+            totalProdutos--;
+            printf("Produto excluído!\n");
+            return;
+        }
+    }
+    printf("Produto não encontrado!\n");
+}
+
+void cadastrarVenda() {
+    Venda v;
+    v.id = totalVendas + 1;
+    v.totalItens = 0;
+    v.totalNota = 0;
+
+    printf("ID do cliente comprador: ");
+    scanf("%d", &v.idCliente); limparBuffer();
+
+    printf("Data da venda (dd/mm/aaaa): ");
+    fgets(v.data, sizeof(v.data), stdin);
+    v.data[strcspn(v.data, "\n")] = '\0';
+
+    printf("Quantos itens na venda? ");
+    scanf("%d", &v.totalItens); limparBuffer();
+
+    for (int i = 0; i < v.totalItens; i++) {
+        printf("ID do produto %d: ", i + 1);
+        scanf("%d", &v.itens[i].idProduto);
+
+        printf("Quantidade: ");
+        scanf("%d", &v.itens[i].quantidade); limparBuffer();
+
+        for (int j = 0; j < totalProdutos; j++) {
+            if (produtos[j].id == v.itens[i].idProduto) {
+                v.itens[i].valorUnitario = produtos[j].preco;
+                v.totalNota += v.itens[i].valorUnitario * v.itens[i].quantidade;
+                produtos[j].estoque -= v.itens[i].quantidade; // Atualiza estoque
+                break;
+            }
+        }
+    }
+
+    vendas[totalVendas++] = v;
+    printf("Venda registrada com sucesso!\n");
+}
+
+void listarVendas() {
+    printf("\n--- Lista de Vendas ---\n");
+    for (int i = 0; i < totalVendas; i++) {
+        printf("Venda ID: %d | Cliente ID: %d | Data: %s | Total: %.2f\n", 
+               vendas[i].id, vendas[i].idCliente, vendas[i].data, vendas[i].totalNota);
+        for (int j = 0; j < vendas[i].totalItens; j++) {
+            printf("  Produto ID: %d | Qtd: %d | Valor Unit: %.2f\n",
+                   vendas[i].itens[j].idProduto, vendas[i].itens[j].quantidade, vendas[i].itens[j].valorUnitario);
+        }
+    }
+}
+
+// Menu principal
+void menu() {
+    int opcao;
+    do {
+        printf("\n--- MENU PRINCIPAL ---\n");
+        printf("1. Cadastrar Cliente\n");
+        printf("2. Listar Clientes\n");
+        printf("3. Atualizar Cliente\n");
+        printf("4. Excluir Cliente\n");
+
+        printf("5. Cadastrar Produto\n");
+        printf("6. Listar Produtos\n");
+        printf("7. Atualizar Produto\n");
+        printf("8. Excluir Produto\n");
+
+        printf("9. Cadastrar Venda\n");
+        printf("10. Listar Vendas\n");
+
+        printf("0. Sair\n");
+        printf("Escolha: ");
+        scanf("%d", &opcao); limparBuffer();
+
+        switch(opcao) {
+            case 1: cadastrarCliente(); break;
+            case 2: listarClientes(); break;
+            case 3: atualizarCliente(); break;
+            case 4: excluirCliente(); break;
+            case 5: cadastrarProduto(); break;
+            case 6: listarProdutos(); break;
+            case 7: atualizarProduto(); break;
+            case 8: excluirProduto(); break;
+            case 9: cadastrarVenda(); break;
+            case 10: listarVendas(); break;
+            case 0: printf("Saindo...\n"); break;
+            default: printf("Opção inválida!\n");
+        }
+
+        pause();
+    } while (opcao != 0);
+}
+
+int main() {
+    menu();
+    return 0;
+}
